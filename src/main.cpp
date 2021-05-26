@@ -2,12 +2,6 @@
 #include "raylib-cpp.hpp"
 #include "raylib.h"
 
-typedef struct Cannon {
-    Vector2 position;
-    float rotation;
-    bool canShoot;
-} Cannon;
-
 int main(void) {
 
     // Initialization
