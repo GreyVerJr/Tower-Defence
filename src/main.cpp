@@ -9,6 +9,7 @@ typedef struct Cannon {
 } Cannon;
 
 int main(void) {
+
     // Initialization
     //--------------------------------------------------------------------------------------
     const int screenWidth = 1076;
