@@ -1,6 +1,16 @@
 #include "Camera2D.hpp"
+#include "array"
 #include "raylib-cpp.hpp"
 #include "raylib.h"
+
+struct Img {
+    Vector2 position;
+    Vector2 origin;
+    Rectangle sourceRec;
+    Rectangle destRec;
+    Texture2D texture;
+    float rotation = 0;
+};
 
 int main(void) {
 
@@ -11,21 +21,30 @@ int main(void) {
 
     InitWindow(screenWidth, screenHeight, "Tower Defence");
 
-    Texture2D mapImg = LoadTexture("resources/map.png");
+    Img map;
+    Img tower;
 
-    int frameWidth = mapImg.width;
-    int frameHeight = mapImg.height;
+    map.texture = LoadTexture("resources/map.png");
+    tower.texture = LoadTexture("resources/tower.png");
+
+    int frameWidth = map.texture.width;
+    int frameHeight = map.texture.height;
+
+    map.rotation = 0;
+    tower.rotation = 0;
 
     // Source rectangle (part of the texture to use for drawing)
-    Rectangle sourceRec = {0.0f, 0.0f, (float)frameWidth, (float)frameHeight};
-
+    tower.sourceRec = {0.0f, 0.0f, (float)tower.texture.width,
+                       (float)tower.texture.height};
     // Destination rectangle (screen rectangle where drawing part of texture)
-    Rectangle destRec = {screenWidth * 1.0f, screenHeight * 1.0f,
-                         frameWidth * 1.0f, frameHeight * 1.0f};
+    tower.destRec = {40, 500, (float)tower.texture.width * 2.0f,
+                     (float)tower.texture.height * 2.0f};
+    tower.origin = {(float)tower.texture.width, (float)tower.texture.height};
 
-    Vector2 origin = {(float)frameWidth, (float)frameHeight};
-
-    int rotation = 0;
+    std::array<float, 10> PlatformPositionX = {40,  270, 270,  420,  500,
+                                               730, 885, 1040, 1040, 805};
+    std::array<float, 10> PlatformPositionY = {500, 580, 345, 115, 115,
+                                               425, 650, 270, 190, 115};
 
     SetTargetFPS(60);
     //--------------------------------------------------------------------------------------
@@ -34,12 +53,19 @@ int main(void) {
     while (!WindowShouldClose()) { // Detect window close button or ESC key
                                    // Update
 
+        tower.rotation++;
         // Draw
         //----------------------------------------------------------------------------------
         BeginDrawing();
 
-        DrawTexturePro(mapImg, sourceRec, destRec, origin, (float)rotation,
-                       WHITE);
+        DrawTexture(map.texture, 0, 0, WHITE);
+
+        tower.destRec = {PlatformPositionX[0], PlatformPositionY[0],
+                         (float)tower.texture.width * 2.0f,
+                         (float)tower.texture.height * 2.0f};
+
+        DrawTexturePro(tower.texture, tower.sourceRec, tower.destRec,
+                       tower.origin, (float)tower.rotation, WHITE);
 
         EndDrawing();
         //---------------------------------------------------------------------------------
