@@ -4,13 +4,22 @@
 #include "raylib.h"
 
 struct Img {
-    Vector2 position;
-    Vector2 origin;
+    Vector2 origin = {0, 0};
     Rectangle sourceRec;
     Rectangle destRec;
     Texture2D texture;
     float rotation = 0;
 };
+
+bool IsBuildingPossible(int PlatformPositionX, int PlatformPositionY,
+                        int coins) {
+    return IsMouseButtonPressed(MOUSE_LEFT_BUTTON) == true &&
+           (GetMouseX() > PlatformPositionX - 30 &&
+            GetMouseX() < PlatformPositionX + 30) &&
+           (GetMouseY() > PlatformPositionY - 30 &&
+            GetMouseY() < PlatformPositionY + 30) &&
+           coins >= 100;
+}
 
 int main(void) {
 
@@ -23,28 +32,56 @@ int main(void) {
 
     Img map;
     Img tower;
+    Img enemy;
 
     map.texture = LoadTexture("resources/map.png");
-    tower.texture = LoadTexture("resources/tower.png");
+    tower.texture = (LoadTexture("resources/tower.png"));
+    enemy.texture = (LoadTexture("resources/enemy.png"));
 
-    int frameWidth = map.texture.width;
-    int frameHeight = map.texture.height;
-
-    map.rotation = 0;
+    std::vector<int> PlatformPositionX = {40,  270, 270,  420,  500,
+                                          730, 885, 1040, 1040, 805};
+    std::vector<int> PlatformPositionY = {500, 580, 345, 115, 115,
+                                          425, 650, 270, 190, 115};
     tower.rotation = 0;
-
     // Source rectangle (part of the texture to use for drawing)
-    tower.sourceRec = {0.0f, 0.0f, (float)tower.texture.width,
+    tower.sourceRec = {0.0F, 0.0F, (float)tower.texture.width,
                        (float)tower.texture.height};
-    // Destination rectangle (screen rectangle where drawing part of texture)
-    tower.destRec = {40, 500, (float)tower.texture.width * 2.0f,
-                     (float)tower.texture.height * 2.0f};
+    // Destination rectangle (screen rectangle where drawing part of
+    // texture)
+    tower.destRec = {(float)PlatformPositionX[0], (float)PlatformPositionY[0],
+                     (float)tower.texture.width * 2.0F,
+                     (float)tower.texture.height * 2.0F};
     tower.origin = {(float)tower.texture.width, (float)tower.texture.height};
 
-    std::array<float, 10> PlatformPositionX = {40,  270, 270,  420,  500,
-                                               730, 885, 1040, 1040, 805};
-    std::array<float, 10> PlatformPositionY = {500, 580, 345, 115, 115,
-                                               425, 650, 270, 190, 115};
+    enemy.rotation = 90;
+    enemy.sourceRec = {0.0F, 0.0F, (float)enemy.texture.width,
+                       (float)enemy.texture.height};
+    enemy.destRec = {920, -20, (float)enemy.texture.width * 2.0F,
+                     (float)enemy.texture.height * 2.0F};
+    enemy.origin = {(float)enemy.texture.width, (float)enemy.texture.height};
+
+    std::vector<int> waypointsX = {920, 915};
+    std::vector<int> waypointsY = {470, 495};
+
+    std::vector<Img> Towers;
+    for (int i = 0; i < 10; i++)
+        Towers.push_back(tower);
+
+    std::vector<Img> Enemies;
+    for (int i = 0; i < 5; i++) {
+        enemy.destRec = {920, (-60) * (float)(i + 1),
+                         (float)enemy.texture.width * 2.0F,
+                         (float)enemy.texture.height * 2.0F};
+        Enemies.push_back(enemy);
+    }
+
+    std::vector<bool> IsPlatformFree;
+    for (int i = 0; i < 10; i++)
+        IsPlatformFree.push_back(true);
+
+    int coins = 0;
+    std::vector<int> waypointsCounter = {0, 0, 0, 0, 0};
+    // int previousPositionX
 
     SetTargetFPS(60);
     //--------------------------------------------------------------------------------------
@@ -53,19 +90,60 @@ int main(void) {
     while (!WindowShouldClose()) { // Detect window close button or ESC key
                                    // Update
 
-        tower.rotation++;
+        // previousPosition[0] = enemy.destRec.x;
+        // previousPosition[1] = enemy.destRec.y;
+
+        coins++;
+        for (int i = 0; i < Enemies.size(); i++) { // Передвижение противников
+            if (Enemies[i].destRec.x == waypointsX[waypointsCounter[i]] &&
+                Enemies[i].destRec.y == waypointsY[waypointsCounter[i]] &&
+                waypointsCounter[i] < waypointsX.size() - 1)
+                waypointsCounter[i]++;
+            if (Enemies[i].destRec.x < waypointsX[waypointsCounter[i]])
+                Enemies[i].destRec.x++;
+            if (Enemies[i].destRec.x > waypointsX[waypointsCounter[i]])
+                Enemies[i].destRec.x--;
+            if (Enemies[i].destRec.y < waypointsY[waypointsCounter[i]])
+                Enemies[i].destRec.y++;
+            if (Enemies[i].destRec.y > waypointsY[waypointsCounter[i]])
+                Enemies[i].destRec.y--;
+        }
+
         // Draw
         //----------------------------------------------------------------------------------
         BeginDrawing();
 
         DrawTexture(map.texture, 0, 0, WHITE);
 
-        tower.destRec = {PlatformPositionX[0], PlatformPositionY[0],
-                         (float)tower.texture.width * 2.0f,
-                         (float)tower.texture.height * 2.0f};
+        for (int i = 0; i < 10; i++) {
 
-        DrawTexturePro(tower.texture, tower.sourceRec, tower.destRec,
-                       tower.origin, (float)tower.rotation, WHITE);
+            if (IsBuildingPossible(PlatformPositionX[i], PlatformPositionY[i],
+                                   coins)) {
+                coins -= 100;
+                IsPlatformFree[i] = false;
+            }
+
+            if (!IsPlatformFree[i]) {
+                Towers[i].destRec = {(float)PlatformPositionX[i],
+                                     (float)PlatformPositionY[i],
+                                     (float)Towers[i].texture.width * 2.0F,
+                                     (float)Towers[i].texture.height * 2.0F};
+
+                DrawTexturePro(Towers[i].texture, Towers[i].sourceRec,
+                               Towers[i].destRec, Towers[i].origin,
+                               (float)Towers[i].rotation, WHITE);
+            }
+        }
+
+        DrawText(TextFormat("Mouse position X: %03i", GetMouseX()), 10, 40, 20,
+                 LIGHTGRAY);
+        DrawText(TextFormat("Mouse position Y: %03i", GetMouseY()), 10, 80, 20,
+                 LIGHTGRAY);
+
+        for (int i = 0; i < Enemies.size(); i++)
+            DrawTexturePro(Enemies[i].texture, enemy.sourceRec,
+                           Enemies[i].destRec, Enemies[i].origin,
+                           Enemies[i].rotation, WHITE);
 
         EndDrawing();
         //---------------------------------------------------------------------------------
