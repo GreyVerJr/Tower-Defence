@@ -60,8 +60,9 @@ int main(void) {
                      (float)enemy.texture.height * 2.0F};
     enemy.origin = {(float)enemy.texture.width, (float)enemy.texture.height};
 
-    std::vector<int> waypointsX = {920, 915};
-    std::vector<int> waypointsY = {470, 495};
+    std::vector<int> waypointsX = {920, 615, 615, 155, 155, -20};
+    std::vector<int> waypointsY = {540, 540, 235, 235, 605, 605};
+    std::vector<int> enemyRotation = {90, 180, -90, 180, 90, 180};
 
     std::vector<Img> Towers;
     for (int i = 0; i < 10; i++)
@@ -97,8 +98,10 @@ int main(void) {
         for (int i = 0; i < Enemies.size(); i++) { // Передвижение противников
             if (Enemies[i].destRec.x == waypointsX[waypointsCounter[i]] &&
                 Enemies[i].destRec.y == waypointsY[waypointsCounter[i]] &&
-                waypointsCounter[i] < waypointsX.size() - 1)
+                waypointsCounter[i] < waypointsX.size() - 1) {
                 waypointsCounter[i]++;
+                Enemies[i].rotation = enemyRotation[waypointsCounter[i]];
+            }
             if (Enemies[i].destRec.x < waypointsX[waypointsCounter[i]])
                 Enemies[i].destRec.x++;
             if (Enemies[i].destRec.x > waypointsX[waypointsCounter[i]])
@@ -141,9 +144,10 @@ int main(void) {
                  LIGHTGRAY);
 
         for (int i = 0; i < Enemies.size(); i++)
-            DrawTexturePro(Enemies[i].texture, enemy.sourceRec,
-                           Enemies[i].destRec, Enemies[i].origin,
-                           Enemies[i].rotation, WHITE);
+            if (Enemies[i].destRec.x != -20)
+                DrawTexturePro(Enemies[i].texture, enemy.sourceRec,
+                               Enemies[i].destRec, Enemies[i].origin,
+                               Enemies[i].rotation, WHITE);
 
         EndDrawing();
         //---------------------------------------------------------------------------------
