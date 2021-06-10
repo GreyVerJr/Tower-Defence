@@ -32,7 +32,3 @@ enable_testing()
 add_subdirectory(external/doctest)
 include(external/doctest/doctest.cmake)
 add_subdirectory(src)
-
-# Так как VSCode любит при запуске неправильно указывать текущий каталог,
-# мы создаём ссылку на каталог resources рядом с исполняемыми файлами
-file(CREATE_LINK "${CMAKE_CURRENT_SOURCE_DIR}/resources" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources" COPY_ON_ERROR SYMBOLIC)

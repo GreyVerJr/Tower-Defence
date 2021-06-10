@@ -203,8 +203,6 @@ int main(void) {
                             Enemies.erase(Enemies.begin() + EnemieNumber.at(i));
                             waypointsCounter.erase((waypointsCounter.begin() +
                                                     EnemieNumber.at(i)));
-                            // if (Enemies.empty())
-                            //     return 0;
                         }
                     }
                 }
