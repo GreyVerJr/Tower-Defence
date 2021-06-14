@@ -169,11 +169,10 @@ int main(void) {
                                    // Update
         if (yourHealth > 0) {
             if (Enemies.empty()) {
-
                 waveNumber++;
                 createWave(waveNumber, enemy, Enemies, waypointsCounter);
             }
-            if (waveNumber == 2)
+            if (waveNumber == 3)
                 winFlag = true;
             for (int i = 0; i < Enemies.size() && winFlag == false; i++) {
                 if (Enemies.at(i).destRec.x ==
