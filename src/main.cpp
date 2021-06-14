@@ -34,10 +34,19 @@ struct BulletStruct {
     float speed = 5;
 };
 
+// Считает расстояние между двумя точками
+// x1 - x координата первой точки
+// y1 - y координата первой точки
+// x2 - x координата второй точки
+// y2 - y координата второй точки
 float distance(int x1, int y1, int x2, int y2) {
     return (float)sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2));
 }
 
+// Проверяет, можно ли поставить башню на данной платформе
+// PlatformPositionX - x координата платформы
+// PlatformPositionY - y координата платвормы
+// coins - количество монет
 bool IsBuildingPossible(int PlatformPositionX, int PlatformPositionY,
                         int coins) {
     return IsMouseButtonPressed(MOUSE_LEFT_BUTTON) == true &&
@@ -45,9 +54,14 @@ bool IsBuildingPossible(int PlatformPositionX, int PlatformPositionY,
             GetMouseX() < PlatformPositionX + 30) &&
            (GetMouseY() > PlatformPositionY - 30 &&
             GetMouseY() < PlatformPositionY + 30) &&
-           coins >= 100;
+           coins >= 30;
 }
 
+// Считает угол, на который нужно повернуть башню
+// towerX - x координата башни
+// towerY - y координата башни
+// enemyX - x координата противника, в которого целиться башня
+// enemyY - y координата противника, в которого целиться башня
 float getRotation(int towerX, int towerY, int enemyX, int enemyY) {
     float tg = (float)(enemyY - towerY) / (float)(enemyX - towerX);
     float angle = atan(tg) * 180.0 / PI;
@@ -56,6 +70,18 @@ float getRotation(int towerX, int towerY, int enemyX, int enemyY) {
     if ((enemyY - towerY) > 0 && (enemyX - towerX) < 0)
         return angle + 180;
     return angle;
+}
+
+void createWave(int &waveNumber, EnemyStruct enemy,
+                std::vector<EnemyStruct> &Enemies,
+                std::vector<int> &waypointsCounter) {
+    for (int i = 0; i < pow(waveNumber, 2) + 4; i++) {
+        enemy.destRec = {920, (-60) * (float)(i + 1),
+                         (float)enemy.texture.width * 2.0F,
+                         (float)enemy.texture.height * 2.0F};
+        Enemies.push_back(enemy);
+        waypointsCounter.push_back(0);
+    }
 }
 
 int main(void) {
@@ -72,6 +98,8 @@ int main(void) {
     BulletStruct bullet;
 
     Texture2D mapTexture = LoadTexture("resources/map.png");
+    Texture2D gameOver = LoadTexture("resources/gameOver.png");
+    Texture2D youWin = LoadTexture("resources/win.png");
 
     std::vector<int> PlatformPositionX = {40,  270, 270,  420,  500,
                                           730, 885, 1040, 1040, 805};
@@ -82,6 +110,7 @@ int main(void) {
                        (float)tower.texture.height};
     // Destination rectangle (screen rectangle where drawing part of
     // texture)
+    ;
     tower.destRec = {(float)PlatformPositionX[0], (float)PlatformPositionY[0],
                      (float)tower.texture.width * 2.0F,
                      (float)tower.texture.height * 2.0F};
@@ -122,19 +151,15 @@ int main(void) {
     }
 
     std::vector<EnemyStruct> Enemies;
-    for (int i = 0; i < 5; i++) {
-        enemy.destRec = {920, (-60) * (float)(i + 1),
-                         (float)enemy.texture.width * 2.0F,
-                         (float)enemy.texture.height * 2.0F};
-        Enemies.push_back(enemy);
-        waypointsCounter.push_back(0);
-    }
 
     std::vector<bool> IsPlatformFree;
     for (int i = 0; i < Towers.size(); i++)
         IsPlatformFree.push_back(true);
 
-    int coins = 1000;
+    int coins = 100;
+    int yourHealth = 5;
+    int waveNumber = 0;
+    bool winFlag = false;
 
     SetTargetFPS(60);
     //--------------------------------------------------------------------------------------
@@ -142,90 +167,110 @@ int main(void) {
     // Main game loop
     while (!WindowShouldClose()) { // Detect window close button or ESC key
                                    // Update
+        if (yourHealth > 0) {
+            if (Enemies.empty()) {
 
-        coins++;
-
-        // Передвижене противников
-        //---------------------------------------------------------------------------------
-        for (int i = 0; i < Enemies.size(); i++) {
-            if (Enemies.at(i).destRec.x == waypointsX[waypointsCounter.at(i)] &&
-                Enemies.at(i).destRec.y == waypointsY[waypointsCounter.at(i)] &&
-                waypointsCounter.at(i) < waypointsX.size() - 1) {
-                waypointsCounter.at(i)++;
-                Enemies.at(i).rotation = enemyRotation[waypointsCounter.at(i)];
+                waveNumber++;
+                createWave(waveNumber, enemy, Enemies, waypointsCounter);
             }
-            if (Enemies.at(i).destRec.x < waypointsX[waypointsCounter.at(i)])
-                Enemies.at(i).destRec.x++;
-            if (Enemies.at(i).destRec.x > waypointsX[waypointsCounter.at(i)])
-                Enemies.at(i).destRec.x--;
-            if (Enemies.at(i).destRec.y < waypointsY[waypointsCounter.at(i)])
-                Enemies.at(i).destRec.y++;
-            if (Enemies.at(i).destRec.y > waypointsY[waypointsCounter.at(i)])
-                Enemies.at(i).destRec.y--;
-        }
-        //---------------------------------------------------------------------------------
+            if (waveNumber == 2)
+                winFlag = true;
+            for (int i = 0; i < Enemies.size() && winFlag == false; i++) {
+                if (Enemies.at(i).destRec.x ==
+                        waypointsX[waypointsCounter.at(i)] &&
+                    Enemies.at(i).destRec.y ==
+                        waypointsY[waypointsCounter.at(i)] &&
+                    waypointsCounter.at(i) < waypointsX.size() - 1) {
+                    waypointsCounter.at(i)++;
+                    Enemies.at(i).rotation =
+                        enemyRotation[waypointsCounter.at(i)];
+                }
+                if (Enemies.at(i).destRec.x <
+                    waypointsX[waypointsCounter.at(i)])
+                    Enemies.at(i).destRec.x++;
+                if (Enemies.at(i).destRec.x >
+                    waypointsX[waypointsCounter.at(i)])
+                    Enemies.at(i).destRec.x--;
+                if (Enemies.at(i).destRec.y <
+                    waypointsY[waypointsCounter.at(i)])
+                    Enemies.at(i).destRec.y++;
+                if (Enemies.at(i).destRec.y >
+                    waypointsY[waypointsCounter.at(i)])
+                    Enemies.at(i).destRec.y--;
+            }
 
-        // Цикл проходит по башням
-        //---------------------------------------------------------------------------------
-        for (int i = 0; i < Towers.size() && !Enemies.empty(); i++) {
-            if (!IsPlatformFree.at(i)) {
-                shootTimer.at(i)--;
-                if (Bullets.at(i).destRec.x != Towers.at(i).destRec.x ||
-                    Bullets.at(i).destRec.y != Towers.at(i).destRec.y ||
-                    Towers.at(i).canShoot) {
-                    BulletSpeedX.at(i) =
-                        5 *
-                        (Enemies[EnemieNumber.at(i)].destRec.x -
-                         Bullets.at(i).destRec.x) /
-                        distance((int)Bullets.at(i).destRec.x,
-                                 (int)Bullets.at(i).destRec.y,
-                                 (int)Enemies[EnemieNumber.at(i)].destRec.x,
-                                 (int)Enemies[EnemieNumber.at(i)].destRec.y);
-                    BulletSpeedY.at(i) =
-                        5 *
-                        (Enemies[EnemieNumber.at(i)].destRec.y -
-                         Bullets.at(i).destRec.y) /
-                        distance((int)Bullets.at(i).destRec.x,
-                                 (int)Bullets.at(i).destRec.y,
-                                 (int)Enemies[EnemieNumber.at(i)].destRec.x,
-                                 (int)Enemies[EnemieNumber.at(i)].destRec.y);
-                    Bullets.at(i).destRec.x += BulletSpeedX.at(i);
-                    Bullets.at(i).destRec.y += BulletSpeedY.at(i);
-                    if (abs(Bullets.at(i).destRec.x -
-                            Enemies[EnemieNumber.at(i)].destRec.x) <= 5 &&
-                        abs(Bullets.at(i).destRec.y -
-                            Enemies[EnemieNumber.at(i)].destRec.y) <= 5) {
-                        Bullets.at(i).destRec.x = Towers.at(i).destRec.x;
-                        Bullets.at(i).destRec.y = Towers.at(i).destRec.y;
-                        Towers.at(i).canShoot = false;
-                        Enemies[EnemieNumber.at(i)].health -= 20;
-                        if (Enemies[EnemieNumber.at(i)].health <= 0) {
-                            Enemies.erase(Enemies.begin() + EnemieNumber.at(i));
-                            waypointsCounter.erase((waypointsCounter.begin() +
-                                                    EnemieNumber.at(i)));
+            for (int i = 0;
+                 i < Towers.size() && !Enemies.empty() && winFlag == false;
+                 i++) {
+                for (int j = 0; j < Enemies.size(); j++) {
+                    if (distance((int)Towers.at(i).destRec.x,
+                                 (int)Towers.at(i).destRec.y,
+                                 (int)Enemies[j].destRec.x,
+                                 (int)Enemies[j].destRec.y) <
+                        (float)Towers[0].radius) {
+                        Towers.at(i).rotation =
+                            getRotation((int)Towers.at(i).destRec.x,
+                                        (int)Towers.at(i).destRec.y,
+                                        (int)Enemies[j].destRec.x,
+                                        (int)Enemies[j].destRec.y) +
+                            90;
+                        if (Bullets.at(i).destRec.x == Towers.at(i).destRec.x &&
+                            Bullets.at(i).destRec.y == Towers.at(i).destRec.y &&
+                            shootTimer.at(i) <= 0) {
+                            EnemieNumber.at(i) = j;
+                            shootTimer.at(i) = 120;
+                            Towers.at(i).canShoot = true;
                         }
+                        break;
                     }
                 }
-            }
-            for (int j = 0; j < Enemies.size(); j++) {
-                if (distance(
-                        (int)Towers.at(i).destRec.x,
-                        (int)Towers.at(i).destRec.y, (int)Enemies[j].destRec.x,
-                        (int)Enemies[j].destRec.y) < (float)Towers[0].radius) {
-                    Towers.at(i).rotation =
-                        getRotation((int)Towers.at(i).destRec.x,
-                                    (int)Towers.at(i).destRec.y,
-                                    (int)Enemies[j].destRec.x,
-                                    (int)Enemies[j].destRec.y) +
-                        90;
-                    if (Bullets.at(i).destRec.x == Towers.at(i).destRec.x &&
-                        Bullets.at(i).destRec.y == Towers.at(i).destRec.y &&
-                        shootTimer.at(i) <= 0) {
-                        EnemieNumber.at(i) = j;
-                        shootTimer.at(i) = 120;
-                        Towers.at(i).canShoot = true;
+                if (!IsPlatformFree.at(i)) {
+                    shootTimer.at(i)--;
+                    if (Bullets.at(i).destRec.x != Towers.at(i).destRec.x ||
+                        Bullets.at(i).destRec.y != Towers.at(i).destRec.y ||
+                        Towers.at(i).canShoot) {
+                        BulletSpeedX.at(i) =
+                            5 *
+                            (Enemies[EnemieNumber.at(i)].destRec.x -
+                             Bullets.at(i).destRec.x) /
+                            distance(
+                                (int)Bullets.at(i).destRec.x,
+                                (int)Bullets.at(i).destRec.y,
+                                (int)Enemies[EnemieNumber.at(i)].destRec.x,
+                                (int)Enemies[EnemieNumber.at(i)].destRec.y);
+                        BulletSpeedY.at(i) =
+                            5 *
+                            (Enemies[EnemieNumber.at(i)].destRec.y -
+                             Bullets.at(i).destRec.y) /
+                            distance(
+                                (int)Bullets.at(i).destRec.x,
+                                (int)Bullets.at(i).destRec.y,
+                                (int)Enemies[EnemieNumber.at(i)].destRec.x,
+                                (int)Enemies[EnemieNumber.at(i)].destRec.y);
+                        Bullets.at(i).destRec.x += BulletSpeedX.at(i);
+                        Bullets.at(i).destRec.y += BulletSpeedY.at(i);
+                        if (abs(Bullets.at(i).destRec.x -
+                                Enemies[EnemieNumber.at(i)].destRec.x) <= 5 &&
+                            abs(Bullets.at(i).destRec.y -
+                                Enemies[EnemieNumber.at(i)].destRec.y) <= 5) {
+                            Bullets.at(i).destRec.x = Towers.at(i).destRec.x;
+                            Bullets.at(i).destRec.y = Towers.at(i).destRec.y;
+                            Towers.at(i).canShoot = false;
+                            Enemies[EnemieNumber.at(i)].health -= 20;
+                            if (Enemies[EnemieNumber.at(i)].health <= 0) {
+                                Enemies.erase(Enemies.begin() +
+                                              EnemieNumber.at(i));
+                                waypointsCounter.erase(
+                                    (waypointsCounter.begin() +
+                                     EnemieNumber.at(i)));
+                                coins += 10;
+                                for (int i = 0; i < EnemieNumber.size(); i++) {
+                                    if (EnemieNumber[i] > 0)
+                                        EnemieNumber[i]--;
+                                }
+                            }
+                        }
                     }
-                    break;
                 }
             }
         }
@@ -234,6 +279,7 @@ int main(void) {
         // Draw
         //----------------------------------------------------------------------------------
         BeginDrawing();
+        ClearBackground(RAYWHITE);
 
         DrawTexture(mapTexture, 0, 0, WHITE);
 
@@ -241,7 +287,7 @@ int main(void) {
 
             if (IsBuildingPossible(PlatformPositionX.at(i),
                                    PlatformPositionY.at(i), coins)) {
-                coins -= 100;
+                coins -= 30;
                 IsPlatformFree.at(i) = false;
             }
 
@@ -261,19 +307,31 @@ int main(void) {
             }
         }
 
-        for (int i = 0; i < Enemies.size(); i++)
+        for (int i = 0; i < Enemies.size(); i++) {
             if (Enemies.at(i).destRec.x != -20)
                 DrawTexturePro(Enemies.at(i).texture, enemy.sourceRec,
                                Enemies.at(i).destRec, Enemies.at(i).origin,
                                Enemies.at(i).rotation, WHITE);
+            else {
+                Enemies.erase(Enemies.begin() + EnemieNumber.at(i));
+                waypointsCounter.erase(
+                    (waypointsCounter.begin() + EnemieNumber.at(i)));
+                yourHealth--;
+            }
+        }
 
-        DrawText(TextFormat("Box position X: %03i", GetMouseX()), 10, 40, 20,
-                 LIGHTGRAY);
-        DrawText(TextFormat("Box position Y: %03i", GetMouseY()), 10, 80, 20,
-                 LIGHTGRAY);
+        DrawText(TextFormat("Coins: %01i", coins), 10, 20, 20, BLACK);
+        DrawText(TextFormat("Your health: %01i", yourHealth), 10, 40, 20,
+                 BLACK);
+        if (winFlag)
+            DrawTexture(youWin, 350, 250, WHITE);
+
+        if (yourHealth <= 0)
+            DrawTexture(gameOver, 250, 150, WHITE);
 
         EndDrawing();
         //---------------------------------------------------------------------------------
     }
+
     return 0;
 }
