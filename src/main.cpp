@@ -1,10 +1,11 @@
 #include "Camera2D.hpp"
-#include "array"
 #include "cmath"
+#include "lib.hpp"
 #include "raylib-cpp.hpp"
 #include "raylib.h"
 
 #define PI 3.14159265
+#define DAMAGE 25
 
 struct EnemyStruct {
     Vector2 origin = {0, 0};
@@ -33,44 +34,6 @@ struct BulletStruct {
     float rotation = 0;
     float speed = 5;
 };
-
-// Считает расстояние между двумя точками
-// x1 - x координата первой точки
-// y1 - y координата первой точки
-// x2 - x координата второй точки
-// y2 - y координата второй точки
-float distance(int x1, int y1, int x2, int y2) {
-    return (float)sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2));
-}
-
-// Проверяет, можно ли поставить башню на данной платформе
-// PlatformPositionX - x координата платформы
-// PlatformPositionY - y координата платвормы
-// coins - количество монет
-bool IsBuildingPossible(int PlatformPositionX, int PlatformPositionY,
-                        int coins) {
-    return IsMouseButtonPressed(MOUSE_LEFT_BUTTON) == true &&
-           (GetMouseX() > PlatformPositionX - 30 &&
-            GetMouseX() < PlatformPositionX + 30) &&
-           (GetMouseY() > PlatformPositionY - 30 &&
-            GetMouseY() < PlatformPositionY + 30) &&
-           coins >= 30;
-}
-
-// Считает угол, на который нужно повернуть башню
-// towerX - x координата башни
-// towerY - y координата башни
-// enemyX - x координата противника, в которого целиться башня
-// enemyY - y координата противника, в которого целиться башня
-float getRotation(int towerX, int towerY, int enemyX, int enemyY) {
-    float tg = (float)(enemyY - towerY) / (float)(enemyX - towerX);
-    float angle = atan(tg) * 180.0 / PI;
-    if ((enemyY - towerY) < 0 && (enemyX - towerX) < 0)
-        return angle - 180;
-    if ((enemyY - towerY) > 0 && (enemyX - towerX) < 0)
-        return angle + 180;
-    return angle;
-}
 
 void createWave(int &waveNumber, EnemyStruct enemy,
                 std::vector<EnemyStruct> &Enemies,
@@ -255,7 +218,7 @@ int main(void) {
                             Bullets.at(i).destRec.x = Towers.at(i).destRec.x;
                             Bullets.at(i).destRec.y = Towers.at(i).destRec.y;
                             Towers.at(i).canShoot = false;
-                            Enemies[EnemieNumber.at(i)].health -= 20;
+                            Enemies[EnemieNumber.at(i)].health -= DAMAGE;
                             if (Enemies[EnemieNumber.at(i)].health <= 0) {
                                 Enemies.erase(Enemies.begin() +
                                               EnemieNumber.at(i));
@@ -284,7 +247,9 @@ int main(void) {
 
         for (int i = 0; i < Towers.size(); i++) {
 
-            if (IsBuildingPossible(PlatformPositionX.at(i),
+            if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) == true &&
+                IsBuildingPossible(GetMouseX(), GetMouseY(),
+                                   PlatformPositionX.at(i),
                                    PlatformPositionY.at(i), coins)) {
                 coins -= 30;
                 IsPlatformFree.at(i) = false;
