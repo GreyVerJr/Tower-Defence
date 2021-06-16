@@ -73,7 +73,6 @@ int main(void) {
                        (float)tower.texture.height};
     // Destination rectangle (screen rectangle where drawing part of
     // texture)
-    ;
     tower.destRec = {(float)PlatformPositionX[0], (float)PlatformPositionY[0],
                      (float)tower.texture.width * 2.0F,
                      (float)tower.texture.height * 2.0F};
@@ -135,7 +134,7 @@ int main(void) {
                 waveNumber++;
                 createWave(waveNumber, enemy, Enemies, waypointsCounter);
             }
-            if (waveNumber == 3)
+            if (waveNumber == 4)
                 winFlag = true;
             for (int i = 0; i < Enemies.size() && winFlag == false; i++) {
                 if (Enemies.at(i).destRec.x ==
