@@ -101,6 +101,7 @@ int main(void) {
     std::vector<float> BulletSpeedY;
     std::vector<int> shootTimer;
     std::vector<int> EnemieNumber;
+    std::vector<bool> IsPlatformFree;
     for (int i = 0; i < 10; i++) {
         EnemieNumber.push_back(0);
         Bullets.push_back(bullet);
@@ -110,13 +111,10 @@ int main(void) {
         BulletSpeedX.push_back(0);
         BulletSpeedY.push_back(0);
         shootTimer.push_back(120);
+        IsPlatformFree.push_back(true);
     }
 
     std::vector<EnemyStruct> Enemies;
-
-    std::vector<bool> IsPlatformFree;
-    for (int i = 0; i < Towers.size(); i++)
-        IsPlatformFree.push_back(true);
 
     int coins = 100;
     int yourHealth = 5;
@@ -234,6 +232,26 @@ int main(void) {
                     }
                 }
             }
+        }
+        if (IsKeyPressed(KEY_R)) {
+            coins = 100;
+            yourHealth = 5;
+            waveNumber = 1;
+            winFlag = false;
+            for (int i = 0; i < 10; i++) {
+                EnemieNumber.at(i) = 0;
+                Bullets.at(i).destRec.x = PlatformPositionX.at(i);
+                Bullets.at(i).destRec.y = PlatformPositionY.at(i);
+                Towers.at(i).rotation = 90;
+                Towers.at(i).canShoot = false;
+                BulletSpeedX.at(i) = 0;
+                BulletSpeedY.at(i) = 0;
+                shootTimer.at(i) = 0;
+                IsPlatformFree.at(i) = true;
+            }
+            Enemies.clear();
+            waypointsCounter.clear();
+            createWave(waveNumber, enemy, Enemies, waypointsCounter);
         }
         //---------------------------------------------------------------------------------
 
