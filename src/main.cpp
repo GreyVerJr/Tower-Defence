@@ -5,7 +5,7 @@
 #include "raylib.h"
 
 #define PI 3.14159265
-#define DAMAGE 25
+#define DAMAGE 20
 
 struct EnemyStruct {
     Vector2 origin = {0, 0};
@@ -13,7 +13,7 @@ struct EnemyStruct {
     Rectangle destRec;
     Texture2D texture = (LoadTexture("resources/enemy.png"));
     float rotation = 90;
-    int health = 100;
+    int health = 120;
 };
 
 struct TowerStruct {
@@ -135,6 +135,7 @@ int main(void) {
             if (waveNumber == 4)
                 winFlag = true;
             for (int i = 0; i < Enemies.size() && winFlag == false; i++) {
+                // Поворачивает врагов, если они прошли соответствующий waypoint
                 if (Enemies.at(i).destRec.x ==
                         waypointsX[waypointsCounter.at(i)] &&
                     Enemies.at(i).destRec.y ==
@@ -144,6 +145,7 @@ int main(void) {
                     Enemies.at(i).rotation =
                         enemyRotation[waypointsCounter.at(i)];
                 }
+                // Передвижение врагов
                 if (Enemies.at(i).destRec.x <
                     waypointsX[waypointsCounter.at(i)])
                     Enemies.at(i).destRec.x++;
@@ -188,6 +190,7 @@ int main(void) {
                     if (Bullets.at(i).destRec.x != Towers.at(i).destRec.x ||
                         Bullets.at(i).destRec.y != Towers.at(i).destRec.y ||
                         Towers.at(i).canShoot) {
+                        // Считаем направление полета пули
                         BulletSpeedX.at(i) =
                             5 *
                             (Enemies[EnemieNumber.at(i)].destRec.x -
@@ -206,8 +209,10 @@ int main(void) {
                                 (int)Bullets.at(i).destRec.y,
                                 (int)Enemies[EnemieNumber.at(i)].destRec.x,
                                 (int)Enemies[EnemieNumber.at(i)].destRec.y);
+                        // Передвигаем пули
                         Bullets.at(i).destRec.x += BulletSpeedX.at(i);
                         Bullets.at(i).destRec.y += BulletSpeedY.at(i);
+
                         if (abs(Bullets.at(i).destRec.x -
                                 Enemies[EnemieNumber.at(i)].destRec.x) <= 5 &&
                             abs(Bullets.at(i).destRec.y -
@@ -233,7 +238,7 @@ int main(void) {
                 }
             }
         }
-        if (IsKeyPressed(KEY_R)) {
+        if (IsKeyPressed(KEY_R)) { // restart
             coins = 100;
             yourHealth = 5;
             waveNumber = 1;
