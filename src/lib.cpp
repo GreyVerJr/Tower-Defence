@@ -1,7 +1,7 @@
 #include "lib.hpp"
 #include "cmath"
 
-#define PI 3.14159265
+constexpr double PI = 3.14159265;
 
 float distance(int x1, int y1, int x2, int y2) {
     return (float)sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2));

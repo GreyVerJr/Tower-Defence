@@ -1,11 +1,11 @@
-#include "Camera2D.hpp"
-#include "cmath"
 #include "lib.hpp"
-#include "raylib-cpp.hpp"
-#include "raylib.h"
+#include <Camera2D.hpp>
+#include <cmath>
+#include <raylib-cpp.hpp>
+#include <raylib.h>
 
-#define PI 3.14159265
-#define DAMAGE 20
+// constexpr double PI = 3.14159265;
+const int DAMAGE = 20;
 
 struct EnemyStruct {
     Vector2 origin = {0, 0};
